@@ -116,7 +116,7 @@ const OPEN_EDGES = [
 const SPINE_POINTS = [LOCATIONS["D-Spine South"], LOCATIONS["D-Spine Mid"], LOCATIONS["D-Spine North"]];
 
 const els = Object.fromEntries([
-  "start","destination","plan","reset","routeDecision","decisionText","temp","condition","feels","rain","rainProb","humidity","wind","recommendation","straightDistance","walkableDistance","primaryDistance","backupDistance","primaryRisk","backupRisk","checkpoints","avgTemp","maxRain","maxWind","weatherTable","download","weatherIcon","routeReason","primaryMode","backupMode","coveredRisk","openRisk","coverageValue","rainStatus","heatStatus","routeComparison","analysisRows"
+  "start","destination","planBtn","resetBtn","routeDecision","decisionText","temp","condition","feels","rain","rainProb","humidity","wind","recommendation","straightDistance","walkableDistance","primaryDistance","backupDistance","primaryRisk","backupRisk","checkpoints","avgTemp","maxRain","maxWind","weatherTable","downloadBtn","weatherIcon","routeReason","primaryMode","backupMode","coveredRisk","openRisk","coverageValue","rainStatus","heatStatus","routeComparison","analysisRows"
 ].map(id => [id, document.getElementById(id)]));
 
 let map, primaryLayer, backupLayer, checkpointLayer, endpointLayer, networkLayer, straightLayer;
@@ -272,11 +272,11 @@ function buildCsv(){if(!lastAnalysis)return;const rows=[["Start","Destination","
 
 async function planRoute(){
   if(els.start.value===els.destination.value){els.decisionText.textContent="Choose two different BITS Goa locations.";return;}
-  els.plan.disabled=true;els.plan.textContent="Analyzing BITS Goa…";els.routeDecision.textContent="Analyzing campus weather…";els.decisionText.textContent="Sampling live weather on the campus path network, including covered pathways and the D-Spine where applicable.";
+  els.planBtn.disabled=true;els.planBtn.textContent="Analyzing BITS Goa…";els.routeDecision.textContent="Analyzing campus weather…";els.decisionText.textContent="Sampling live weather on the campus path network, including covered pathways and the D-Spine where applicable.";
   try{const [covered,open]=await Promise.all([analyzeRoute("Covered route","covered"),analyzeRoute("Open route","open")]);const [primary,backup]=choosePrimary(covered,open);lastAnalysis={routes:[primary,backup],primary,backup};clearLayers();drawStraightLine();primaryLayer=drawRoute(primary,true);backupLayer=drawRoute(backup,false);drawCheckpoints([primary,backup]);showEndpoints();fitRoutes([primary,backup]);updateSummary(primary,backup,[primary,backup]);}
   catch(err){console.error(err);els.routeDecision.textContent="Weather data could not be loaded";els.decisionText.textContent="Check your internet connection and try again. Weather is supplied by Open-Meteo without an API key.";els.recommendation.className="recommendation warning";els.recommendation.textContent="No route recommendation was generated.";}
-  finally{els.plan.disabled=false;els.plan.textContent="Plan route";}
+  finally{els.planBtn.disabled=false;els.planBtn.textContent="Plan route";}
 }
 function resetApp(){clearLayers();if(map)map.setView(CAMPUS_CENTER,16.5);els.routeDecision.textContent="Choose a BITS Goa route";els.decisionText.textContent="Select a campus start point and destination to compare covered and open route options.";els.recommendation.className="recommendation neutral";els.recommendation.textContent="Plan a route to see the weather-based recommendation.";[els.temp,els.feels,els.rain,els.rainProb,els.humidity,els.wind,els.straightDistance,els.walkableDistance,els.primaryDistance,els.backupDistance,els.primaryRisk,els.backupRisk,els.checkpoints,els.avgTemp,els.maxRain,els.maxWind,els.coveredRisk,els.openRisk].forEach(e=>e.textContent="--");els.condition.textContent="Waiting for route analysis…";els.weatherIcon.textContent="☁️";els.coverageValue.textContent="--";els.rainStatus.textContent="--";els.heatStatus.textContent="--";els.routeComparison.textContent="--";els.routeReason.textContent="--";els.primaryMode.textContent="--";els.backupMode.textContent="--";els.analysisRows.textContent="";els.weatherTable.innerHTML="";lastAnalysis=null;}
 
-populate();initMap();els.plan.addEventListener("click",planRoute);els.reset.addEventListener("click",resetApp);els.download.addEventListener("click",buildCsv);
+populate();initMap();els.planBtn.addEventListener("click",planRoute);els.resetBtn.addEventListener("click",resetApp);els.downloadBtn.addEventListener("click",buildCsv);

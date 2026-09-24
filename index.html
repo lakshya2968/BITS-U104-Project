@@ -1,25 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>mapsbpgc.com</title>
-
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Location Planner</title>
+  
+  <!-- Leaflet CSS for Map rendering -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
+  <div class="container">
+    <h2>Destination Weather & Coverage Explorer</h2>
+    
+    <div class="controls">
+      <label for="destination">Select Destination:</label>
+      <select id="destination">
+        <option value="">-- Choose Location --</option>
+      </select>
+    </div>
 
-    <h1>mapsbpgc.com</h1>
+    <!-- The Map Container -->
+    <div id="map"></div>
 
-    <p>BITS Pilani Goa Campus Coverage Map</p>
+    <!-- Output Box for Weather Advice -->
+    <div id="weather-card" class="card hidden">
+      <h3 id="loc-name">---</h3>
+      <p><strong>Temperature:</strong> <span id="loc-temp">--</span>°C</p>
+      <p><strong>Condition:</strong> <span id="loc-cond">--</span></p>
+      <p id="loc-advice" class="advice"></p>
+    </div>
+  </div>
 
-    <script src="script.js"></script>
-
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
 </body>
-
 </html>

@@ -1,58 +1,66 @@
-# Weather Route Planner
+# BITS Goa Weather-Aware Route Planner
 
-A small-scale college project that combines:
+A college-level web project for BITS Pilani K. K. Birla Goa Campus.
 
-- Interactive maps
-- Predefined locations
-- User-selected start and destination
-- Current weather data
-- Route-area analysis
-- Coverage circles
-- Data-based weather risk classification
+## What this version does
 
-## Files
+1. Select a starting landmark and destination.
+2. Builds two route models:
+   - **Covered / sheltered route**: modeled through academic/indoor-adjacent campus landmarks.
+   - **Open route**: modeled through outdoor/open-space landmarks.
+3. Fetches current weather for multiple checkpoints on both routes.
+4. Calculates a project-specific weather risk score.
+5. Automatically selects the lower-risk route as the **primary route**.
+6. Keeps the other route visible as the **backup route**.
+7. Shows temperature, apparent temperature, rain, rain probability, humidity and wind.
+8. Displays colored weather checkpoints on the Leaflet map.
+9. Exports route/weather observations as CSV for data-analysis work.
 
-- `index.html` — website structure
-- `style.css` — styling
-- `script.js` — map, route, weather API and analysis logic
+## Run locally
 
-## How to run
-
-You can open `index.html` in a browser, but using a local server is recommended.
-
-For example, with VS Code:
-1. Install the Live Server extension.
-2. Open the project folder.
-3. Right-click `index.html`.
-4. Choose **Open with Live Server**.
-
-## Important
-
-The project currently uses sample locations in Goa. To use your own locations, edit the `LOCATIONS` array in `script.js`.
+Open the folder in VS Code and use Live Server, or serve the folder with any local web server.
 
 Example:
 
-```js
-{
-  id: "college",
-  name: "My College",
-  lat: 23.83,
-  lon: 91.28
-}
+```bash
+python -m http.server 8000
 ```
 
-The weather is fetched from Open-Meteo and no API key is required for this prototype.
+Then open http://localhost:8000 in a browser.
 
-## What the project analyses
+## Deploy on GitHub Pages
 
-For each of five points between the selected start and destination, the website obtains:
+Upload these files to your repository root:
 
-- Temperature
-- Apparent temperature
-- Humidity
-- Rain
-- Precipitation
-- Wind speed
-- Weather code
+- `index.html`
+- `style.css`
+- `script.js`
 
-A project-specific risk score is then calculated. The score is used only for visualization and should not be described as an official weather or safety warning.
+Then enable GitHub Pages from the repository's Pages settings.
+
+## Important project limitation
+
+The route geometry is intentionally a **student-project model**, not an official BITS pedestrian navigation dataset. The landmark names are based on BITS Goa campus information and the published campus map, while the coordinates are approximate points used to demonstrate route/weather analysis. Before presenting the project as a real navigation system, replace the modeled paths with verified pedestrian-path data from the campus.
+
+## Weather API
+
+The project uses Open-Meteo, so there is no API key in the frontend.
+
+## Suggested viva explanation
+
+**Input:** start + destination.
+
+**Processing:** create two route alternatives → sample weather at checkpoints → compute risk score → compare routes.
+
+**Output:** primary route + backup route + map + weather table + CSV dataset.
+
+This makes the project more than a map: it demonstrates data collection, data transformation, a simple decision model, visualization and export for analysis.
+
+## Sources
+
+- BITS Pilani Goa campus official site: https://www.bits-pilani.ac.in/goa/about-us/
+- BITS Goa campus facilities: https://www.bits-pilani.ac.in/goa/campus-facilities/
+- Published BITS Goa campus map / campus information: https://universe.bits-pilani.ac.in/uploads/campusinfo.pdf
+- Weather API: https://open-meteo.com/
+- Map tiles: https://www.openstreetmap.org/
+- Map library: https://leafletjs.com/

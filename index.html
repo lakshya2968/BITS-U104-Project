@@ -1,98 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Weather Route Planner</title>
-
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIINfQ3g8M6g6jv0nY6b6q5X5b5f5f5f5f5="
-    crossorigin=""
-  >
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BITS Goa Weather Route Planner</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-  <main class="container">
-    <header class="hero">
-      <div>
-        <p class="eyebrow">BTech / UG Small-Scale Project</p>
-        <h1>Weather Route Planner</h1>
-        <p class="subtitle">
-          Select a destination and analyse the route using current weather data.
-        </p>
-      </div>
-    </header>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">BITS PILANI · K. K. BIRLA GOA CAMPUS</p>
+      <h1>Weather-Aware Campus Route Planner</h1>
+      <p class="subtitle">Choose a campus destination and get a weather-based primary route plus a backup route.</p>
+    </div>
+    <div class="live-pill"><span class="dot"></span> Live weather</div>
+  </header>
 
+  <main class="container">
     <section class="controls card">
-      <div class="field">
-        <label for="start">Starting Location</label>
+      <div class="control-group">
+        <label for="start">Start location</label>
         <select id="start"></select>
       </div>
-
-      <div class="field">
+      <div class="control-group">
         <label for="destination">Destination</label>
         <select id="destination"></select>
       </div>
-
-      <button id="analyseBtn" class="primary-btn">Analyse Route</button>
+      <button id="planBtn">Plan route</button>
+      <button id="resetBtn" class="secondary">Reset</button>
     </section>
 
-    <section id="status" class="status hidden"></section>
-
-    <section class="map-card card">
-      <div id="map"></div>
-    </section>
-
-    <section id="result" class="result-grid hidden">
-      <div class="card summary-card">
-        <div class="section-title">
-          <h2>Route Analysis</h2>
-          <span id="routeBadge" class="badge">—</span>
-        </div>
-
-        <div class="stats">
-          <div class="stat">
-            <span>Distance</span>
-            <strong id="distanceValue">—</strong>
-          </div>
-          <div class="stat">
-            <span>Average temperature</span>
-            <strong id="temperatureValue">—</strong>
-          </div>
-          <div class="stat">
-            <span>Rain risk</span>
-            <strong id="rainValue">—</strong>
-          </div>
-          <div class="stat">
-            <span>Areas checked</span>
-            <strong id="areasValue">—</strong>
-          </div>
-        </div>
-
-        <div id="advice" class="advice"></div>
+    <section class="status card" id="statusCard">
+      <div>
+        <p class="eyebrow">ROUTE DECISION</p>
+        <h2 id="routeDecision">Select two locations</h2>
+        <p id="decisionText">The app will compare a modeled sheltered route and open route using live weather data.</p>
       </div>
-
-      <div class="card weather-card">
-        <h2>Weather Along Route</h2>
-        <div id="weatherList"></div>
+      <div class="legend">
+        <span><i class="legend-dot good"></i>Good</span>
+        <span><i class="legend-dot caution"></i>Caution</span>
+        <span><i class="legend-dot danger"></i>Risk</span>
       </div>
     </section>
 
-    <footer>
-      <p>
-        Weather data: Open-Meteo. Map data: OpenStreetMap contributors.
-      </p>
-    </footer>
+    <section class="grid">
+      <div class="map-card card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">CAMPUS MAP</p>
+            <h2>Primary + backup route</h2>
+          </div>
+          <span class="small-note">BITS Goa · Zuarinagar</span>
+        </div>
+        <div id="map"></div>
+        <div class="route-legend">
+          <span><b class="line primary-line"></b> Primary route</span>
+          <span><b class="line backup-line"></b> Backup route</span>
+          <span><b class="line waypoint-line"></b> Weather checkpoints</span>
+        </div>
+      </div>
+
+      <aside class="side-column">
+        <div class="card weather-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">CURRENT CONDITIONS</p>
+              <h2>Campus weather</h2>
+            </div>
+            <span id="weatherIcon" class="weather-icon">☁️</span>
+          </div>
+          <div class="weather-main">
+            <span id="temp">--</span><span class="unit">°C</span>
+          </div>
+          <p id="condition">Waiting for route analysis…</p>
+          <div class="metrics">
+            <div><span>Feels like</span><strong id="feels">--</strong></div>
+            <div><span>Rain now</span><strong id="rain">--</strong></div>
+            <div><span>Humidity</span><strong id="humidity">--</strong></div>
+            <div><span>Wind</span><strong id="wind">--</strong></div>
+          </div>
+        </div>
+
+        <div class="card recommendation-card">
+          <p class="eyebrow">RECOMMENDATION</p>
+          <div id="recommendation" class="recommendation neutral">Plan a route to see the recommendation.</div>
+          <div class="route-summary">
+            <div><span>Primary distance</span><strong id="primaryDistance">--</strong></div>
+            <div><span>Backup distance</span><strong id="backupDistance">--</strong></div>
+            <div><span>Risk score</span><strong id="riskScore">--</strong></div>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="card analysis-card">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">DATA ANALYSIS</p>
+          <h2>Weather along the two routes</h2>
+        </div>
+        <button id="downloadBtn" class="secondary small-btn">Download CSV</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat"><span>Checkpoints</span><strong id="checkpoints">--</strong></div>
+        <div class="stat"><span>Average temperature</span><strong id="avgTemp">--</strong></div>
+        <div class="stat"><span>Maximum rain</span><strong id="maxRain">--</strong></div>
+        <div class="stat"><span>Maximum wind</span><strong id="maxWind">--</strong></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Route</th><th>Checkpoint</th><th>Temperature</th><th>Rain</th><th>Wind</th><th>Condition</th><th>Risk</th>
+            </tr>
+          </thead>
+          <tbody id="weatherTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card info-card">
+      <p class="eyebrow">PROJECT NOTE</p>
+      <p><strong>How the route choice works:</strong> the app compares a modeled <strong>sheltered/covered route</strong> with a modeled <strong>open route</strong>. Rain or storm conditions increase the open-route risk; very high heat also increases exposure. The lower-risk route becomes primary and the other route is retained as the backup.</p>
+      <p class="warning"><strong>Important:</strong> this is a student project prototype. The covered/open paths are modeled from campus landmarks and are not an official BITS pedestrian-routing map. Always follow campus access rules and actual walkways.</p>
+      <p class="sources">Campus facts and landmark names are based on BITS Pilani Goa campus information and the published campus map. Weather is fetched from Open-Meteo.</p>
+    </section>
   </main>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <footer>Student project · BITS Goa · Weather data: Open-Meteo · Map: OpenStreetMap/Leaflet</footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

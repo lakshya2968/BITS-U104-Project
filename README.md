@@ -1,24 +1,29 @@
-# BITS Goa Weather-Aware Campus Route Planner
+# BITS Goa Weather-Aware Campus Route Planner — Path Network v5
 
-A BITS Pilani K. K. Birla Goa Campus student project that compares two route models between campus landmarks using current weather data.
+This version is BITS Goa-centric and no longer uses the old Goa-city demo locations.
 
-## What is fixed in this version
+## What changed in v5
 
-- Removed the old Goa-city demo/test destinations completely.
-- All selectable locations are BITS Goa campus landmarks.
-- The map is centered on the BITS Goa campus.
-- The route engine creates two BITS Goa-specific alternatives:
-  - **Covered / sheltered route**: favors the Main Building, Library Complex, Computer Center, Lecture Theatres, Auditorium, Dome, Plaza and SAC corridor.
-  - **Open / outdoor route**: favors Central Lawns, Shopping Complex, Medical Centre, Playground, C-Mess and the D-side area.
-  - **D-side hostels**: DH-1 through DH-6 are included as selectable start/destination points.
-  - **D-Spine**: when a trip touches the D-side, the covered route explicitly considers the D-Spine as a route corridor; the open alternative also considers D-Spine access as a navigation landmark.
-- The lower weather-risk option is automatically shown as the **primary route**.
-- The other route remains visible as the **backup route**.
-- Weather checkpoints are shown along both routes.
-- Current temperature, apparent temperature, humidity, rain, rain probability and wind are displayed.
-- A route-risk score is calculated from rain, rain probability, heat, wind and storm indicators.
-- CSV export contains the sampled weather data for data-analysis work.
-- No weather API key is required; the project uses Open-Meteo.
+- Reworked the landmark layout to better match the published BITS Goa campus maps.
+- Removed the earlier diagonal/straight-line route construction that could cut through buildings or lawns.
+- Added an explicit **campus path network** with junctions between the gate, academic area, A/C/AH hostel areas and D-side.
+- Added **all current student-hostel selections used by this model**: AH1–AH9, CH1–CH7 and DH1–DH6.
+- Added **D-Spine South → Mid → North** as an explicit route corridor.
+- Added the two covered-path concepts documented by BITS Goa's current walking/conference information:
+  - **C-hostels → Main Building / B-Dome**
+  - **D-hostels → D-Spine**
+- Covered links are drawn in teal; D-Spine is purple.
+- The route engine now uses a shortest-path graph rather than interpolating a direct line between two buildings.
+- Covered mode gives documented covered links a lower routing cost; open mode favors normal outdoor circulation while still allowing covered links if they are the only practical connection.
+- Weather is sampled along the actual selected graph path for both route modes.
+- The lower weather-risk route is shown as primary; the other remains the backup.
+- CSV export remains available for the data-analysis part of the project.
+
+## Important path-accuracy note
+
+BITS Goa's public material confirms the campus landmarks and explicitly describes two covered pathways for rain/humid weather. It does not publish a machine-readable pedestrian GIS network. Therefore the path graph in this student project is a **verified-concept + approximate-coordinate model**, not an official navigation service.
+
+If a BITS Goa student provides a current campus pedestrian map or tells us that a particular connector is missing/wrong, the path graph can be edited in one place: `OPEN_EDGES` and `COVERED_EDGES` in `script.js`.
 
 ## Run locally
 
@@ -30,34 +35,32 @@ python -m http.server 8000
 
 Then open `http://localhost:8000`.
 
-## GitHub Pages
+## Data-analysis component
 
-Upload `index.html`, `style.css` and `script.js` to the repository root and enable GitHub Pages.
+The app records for each weather checkpoint:
 
-The HTML uses `script.js?v=4` so browsers are less likely to keep an older cached JavaScript file after deployment. If GitHub Pages still shows an old interface, hard-refresh the page (`Ctrl + F5`).
+- route mode
+- route name
+- checkpoint number
+- latitude / longitude
+- temperature
+- apparent temperature
+- humidity
+- rain
+- rain probability
+- wind
+- weather condition/code
+- calculated risk score
 
-## Project logic
+Use the CSV in Excel, Google Sheets, Python/pandas or R for graphs and analysis.
 
-1. User chooses a BITS Goa start point and destination.
-2. The app builds a covered/sheltered route model and an open/outdoor route model.
-3. Several checkpoints are sampled along each route.
-4. Open-Meteo supplies current weather for each checkpoint.
-5. Each checkpoint gets a 0–100 weather-risk score.
-6. Route scores are calculated from the checkpoint scores with exposure adjustments.
-7. Lower score becomes primary; the other route is the backup.
-8. The map, recommendation, statistics and CSV are updated.
+## Sources
 
-## Important accuracy note
-
-BITS Goa's official published campus information/map was used to select landmark names. The coordinates and walking lines in this student project are **approximate route-model points**, not an official BITS pedestrian navigation dataset. BITS Goa sources confirm DH1–DH6 and describe the D-Spine as the corridor connecting the B-Dome/auditorium side to the D block; the exact plotted pedestrian coordinates still need verification against a campus path/GIS map. For a real navigation application, the next upgrade would be to replace the modeled lines with verified pedestrian paths or a campus GIS/path network.
-
-## Official campus information used
-
-- BITS Pilani Goa Campus: https://www.bits-pilani.ac.in/goa/about-us/
-- BITS Goa Campus Facilities: https://www.bits-pilani.ac.in/goa/campus-facilities/
-- BITS Goa SWD/hostel information: https://swd.bits-goa.ac.in/contact/
-- BITS Goa D-Spine / campus walking information: https://sites.google.com/goa.bits-pilani.ac.in/map-contacts-info-ismc26goa?usp=sharing
-- Published BITS Goa campus map/information: https://universe.bits-pilani.ac.in/uploads/campusinfo.pdf
+- BITS Goa official campus overview: https://www.bits-pilani.ac.in/goa/about-us/
+- BITS Goa campus facilities: https://www.bits-pilani.ac.in/goa/campus-facilities/
+- BITS Goa SWD hostel listings: https://swd.bits-goa.ac.in/contact/
+- BITS Goa map / walking information: https://sites.google.com/goa.bits-pilani.ac.in/map-contacts-info-ismc26goa?usp=sharing
+- Published BITS Goa campus map: https://universe.bits-pilani.ac.in/uploads/campusinfo.pdf
 - Weather: https://open-meteo.com/
-- Maps: https://www.openstreetmap.org/
+- Map tiles: https://www.openstreetmap.org/
 - Leaflet: https://leafletjs.com/

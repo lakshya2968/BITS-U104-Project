@@ -13,3 +13,8 @@
 @media(max-width:1000px){.grid{grid-template-columns:1fr}.compare-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:900px){.hero{flex-direction:column}.controls{grid-template-columns:1fr 1fr}#map{height:520px}.stats-grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.container{width:94vw}.controls{grid-template-columns:1fr}.status{align-items:flex-start;flex-direction:column}#map{height:450px}.compare-grid{grid-template-columns:1fr 1fr}.stats-grid{grid-template-columns:1fr 1fr}}
 
 .spine-line { display:inline-block; width:28px; border-top:5px dashed #7c3aed; vertical-align:middle; margin-right:6px; }
+
+.covered-line{display:inline-block;width:28px;height:5px;border-top:5px dashed #14b8a6;vertical-align:middle;margin-right:6px}
+
+/* Distance comparison */
+.straight-line{display:inline-block;width:34px;border-top:3px dashed #111827;vertical-align:middle;margin-right:5px}

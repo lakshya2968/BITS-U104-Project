@@ -35,8 +35,8 @@
     <section class="quick-note">
       <span>📍 BITS Goa campus only</span>
       <span>🌦️ Live weather analysis</span>
-      <span>🛣️ Covered + open alternatives</span>
-    <span>🟣 D-Spine considered</span>
+      <span>🛣️ Campus path network</span>
+    <span>🟣 D-Spine + covered paths</span>
       <span>💾 CSV data export</span>
     </section>
 
@@ -66,10 +66,11 @@
         <div class="route-legend">
           <span><b class="line primary-line"></b> Primary route</span>
           <span><b class="line backup-line"></b> Backup route</span>
+          <span><b class="straight-line"></b> Straight-line distance</span>
           <span><b class="checkpoint-dot"></b> Weather checkpoint</span>
           <span><b class="start-dot"></b> Start</span>
           <span><b class="destination-dot"></b> Destination</span>
-          <span><b class="spine-line"></b> D-Spine</span>
+          <span><b class="spine-line"></b> D-Spine</span><span><b class="covered-line"></b> Covered path</span>
         </div>
       </div>
 
@@ -98,6 +99,8 @@
           <div id="recommendation" class="recommendation neutral">Plan a route to see the weather-based recommendation.</div>
           <p class="reason"><strong>Why?</strong> <span id="routeReason">--</span></p>
           <div class="route-summary">
+            <div><span>Straight-line distance</span><strong id="straightDistance">--</strong></div>
+            <div><span>Walkable distance</span><strong id="walkableDistance">--</strong></div>
             <div><span>Primary distance</span><strong id="primaryDistance">--</strong></div>
             <div><span>Backup distance</span><strong id="backupDistance">--</strong></div>
             <div><span>Primary risk</span><strong id="primaryRisk">--</strong></div>
@@ -150,15 +153,15 @@
     <section class="card info-card">
       <p class="eyebrow">PROJECT / VIVA NOTE</p>
       <p><strong>Input:</strong> a BITS Goa start point and destination.</p>
-      <p><strong>Processing:</strong> the application creates two campus route models, samples live weather at multiple checkpoints, considers the D-Spine when a route touches the D-side, calculates a weather-risk score, compares the routes and selects the lower-risk option as primary.</p>
+      <p><strong>Processing:</strong> the application calculates the direct straight-line distance first, then finds a walkable path through the campus path network. It separately evaluates covered-first and open-first walkable routes, samples live weather at multiple checkpoints, considers covered corridors where the network supports them, calculates weather-risk scores and keeps the other route as backup.</p>
       <p><strong>Output:</strong> primary route + backup route + live weather + route statistics + checkpoint table + downloadable CSV dataset.</p>
-      <p class="warning"><strong>Accuracy note:</strong> landmark names are based on BITS Goa's published campus information/map. The plotted walking paths and coordinates are an approximate student-project model, not an official BITS pedestrian navigation network. The D-side hostel names (DH1–DH6) and D-Spine concept are supported by BITS Goa sources, while the plotted coordinates remain approximate until verified against an official pedestrian map. Follow actual campus walkways and access rules.</p>
+      <p class="warning"><strong>Accuracy note:</strong> the straight line is purely geometric. The walkable route follows the project's explicit campus path network and never uses the straight line as the walking route. The D-Spine is treated as a logical campus corridor in routing, but its exact geometry is intentionally not claimed as an official GIS trace. Covered corridors are given preference in the covered-route model. Verify actual campus access and pedestrian paths on site.</p>
     </section>
   </main>
 
   <footer>Student project · BITS Pilani K. K. Birla Goa Campus · Weather: Open-Meteo · Map: OpenStreetMap / Leaflet</footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="script.js?v=4"></script>
+  <script src="script.js?v=5"></script>
 </body>
 </html>

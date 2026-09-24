@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BITS Goa Weather Route Planner</title>
+  <meta name="description" content="BITS Goa campus weather-aware route planner comparing covered and open walking routes." />
+  <title>BITS Goa · Weather-Aware Campus Route Planner</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -12,7 +13,7 @@
     <div>
       <p class="eyebrow">BITS PILANI · K. K. BIRLA GOA CAMPUS</p>
       <h1>Weather-Aware Campus Route Planner</h1>
-      <p class="subtitle">Choose a campus destination and get a weather-based primary route plus a backup route.</p>
+      <p class="subtitle">Compare a sheltered campus route with an open route and keep the safer option as your primary route while retaining the other as a backup.</p>
     </div>
     <div class="live-pill"><span class="dot"></span> Live weather</div>
   </header>
@@ -31,11 +32,19 @@
       <button id="resetBtn" class="secondary">Reset</button>
     </section>
 
+    <section class="quick-note">
+      <span>📍 BITS Goa campus only</span>
+      <span>🌦️ Live weather analysis</span>
+      <span>🛣️ Covered + open alternatives</span>
+    <span>🟣 D-Spine considered</span>
+      <span>💾 CSV data export</span>
+    </section>
+
     <section class="status card" id="statusCard">
       <div>
         <p class="eyebrow">ROUTE DECISION</p>
-        <h2 id="routeDecision">Select two locations</h2>
-        <p id="decisionText">The app will compare a modeled sheltered route and open route using live weather data.</p>
+        <h2 id="routeDecision">Choose a BITS Goa route</h2>
+        <p id="decisionText">Select a campus start point and destination to compare covered and open route options.</p>
       </div>
       <div class="legend">
         <span><i class="legend-dot good"></i>Good</span>
@@ -48,16 +57,19 @@
       <div class="map-card card">
         <div class="section-head">
           <div>
-            <p class="eyebrow">CAMPUS MAP</p>
+            <p class="eyebrow">BITS GOA CAMPUS MAP</p>
             <h2>Primary + backup route</h2>
           </div>
-          <span class="small-note">BITS Goa · Zuarinagar</span>
+          <span class="small-note">Zuarinagar · Goa</span>
         </div>
         <div id="map"></div>
         <div class="route-legend">
           <span><b class="line primary-line"></b> Primary route</span>
           <span><b class="line backup-line"></b> Backup route</span>
-          <span><b class="line waypoint-line"></b> Weather checkpoints</span>
+          <span><b class="checkpoint-dot"></b> Weather checkpoint</span>
+          <span><b class="start-dot"></b> Start</span>
+          <span><b class="destination-dot"></b> Destination</span>
+          <span><b class="spine-line"></b> D-Spine</span>
         </div>
       </div>
 
@@ -66,17 +78,16 @@
           <div class="section-head">
             <div>
               <p class="eyebrow">CURRENT CONDITIONS</p>
-              <h2>Campus weather</h2>
+              <h2>BITS Goa weather</h2>
             </div>
             <span id="weatherIcon" class="weather-icon">☁️</span>
           </div>
-          <div class="weather-main">
-            <span id="temp">--</span><span class="unit">°C</span>
-          </div>
+          <div class="weather-main"><span id="temp">--</span><span class="unit">°C</span></div>
           <p id="condition">Waiting for route analysis…</p>
           <div class="metrics">
             <div><span>Feels like</span><strong id="feels">--</strong></div>
             <div><span>Rain now</span><strong id="rain">--</strong></div>
+            <div><span>Rain probability</span><strong id="rainProb">--</strong></div>
             <div><span>Humidity</span><strong id="humidity">--</strong></div>
             <div><span>Wind</span><strong id="wind">--</strong></div>
           </div>
@@ -84,53 +95,70 @@
 
         <div class="card recommendation-card">
           <p class="eyebrow">RECOMMENDATION</p>
-          <div id="recommendation" class="recommendation neutral">Plan a route to see the recommendation.</div>
+          <div id="recommendation" class="recommendation neutral">Plan a route to see the weather-based recommendation.</div>
+          <p class="reason"><strong>Why?</strong> <span id="routeReason">--</span></p>
           <div class="route-summary">
             <div><span>Primary distance</span><strong id="primaryDistance">--</strong></div>
             <div><span>Backup distance</span><strong id="backupDistance">--</strong></div>
-            <div><span>Risk score</span><strong id="riskScore">--</strong></div>
+            <div><span>Primary risk</span><strong id="primaryRisk">--</strong></div>
+            <div><span>Backup risk</span><strong id="backupRisk">--</strong></div>
           </div>
         </div>
       </aside>
+    </section>
+
+    <section class="card comparison-card">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">ROUTE COMPARISON</p>
+          <h2>Covered vs open</h2>
+        </div>
+        <span id="routeComparison" class="small-note">--</span>
+      </div>
+      <div class="compare-grid">
+        <div class="compare-box covered-box"><span>Covered / sheltered</span><strong id="coveredRisk">--</strong><small id="primaryMode">--</small></div>
+        <div class="compare-box open-box"><span>Open / outdoor</span><strong id="openRisk">--</strong><small id="backupMode">--</small></div>
+        <div class="compare-box"><span>Rain exposure</span><strong id="rainStatus">--</strong><small>Based on sampled checkpoints</small></div>
+        <div class="compare-box"><span>Heat exposure</span><strong id="heatStatus">--</strong><small>Based on sampled temperatures</small></div>
+        <div class="compare-box"><span>Route coverage</span><strong id="coverageValue">--</strong><small>Project route model</small></div>
+      </div>
     </section>
 
     <section class="card analysis-card">
       <div class="section-head">
         <div>
           <p class="eyebrow">DATA ANALYSIS</p>
-          <h2>Weather along the two routes</h2>
+          <h2>Weather along the BITS Goa routes</h2>
+          <p id="analysisRows" class="small-note"></p>
         </div>
         <button id="downloadBtn" class="secondary small-btn">Download CSV</button>
       </div>
       <div class="stats-grid">
-        <div class="stat"><span>Checkpoints</span><strong id="checkpoints">--</strong></div>
+        <div class="stat"><span>Weather checkpoints</span><strong id="checkpoints">--</strong></div>
         <div class="stat"><span>Average temperature</span><strong id="avgTemp">--</strong></div>
         <div class="stat"><span>Maximum rain</span><strong id="maxRain">--</strong></div>
         <div class="stat"><span>Maximum wind</span><strong id="maxWind">--</strong></div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>Route</th><th>Checkpoint</th><th>Temperature</th><th>Rain</th><th>Wind</th><th>Condition</th><th>Risk</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Route</th><th>Checkpoint</th><th>Temp</th><th>Rain</th><th>Rain probability</th><th>Wind</th><th>Condition</th><th>Risk</th></tr></thead>
           <tbody id="weatherTable"></tbody>
         </table>
       </div>
     </section>
 
     <section class="card info-card">
-      <p class="eyebrow">PROJECT NOTE</p>
-      <p><strong>How the route choice works:</strong> the app compares a modeled <strong>sheltered/covered route</strong> with a modeled <strong>open route</strong>. Rain or storm conditions increase the open-route risk; very high heat also increases exposure. The lower-risk route becomes primary and the other route is retained as the backup.</p>
-      <p class="warning"><strong>Important:</strong> this is a student project prototype. The covered/open paths are modeled from campus landmarks and are not an official BITS pedestrian-routing map. Always follow campus access rules and actual walkways.</p>
-      <p class="sources">Campus facts and landmark names are based on BITS Pilani Goa campus information and the published campus map. Weather is fetched from Open-Meteo.</p>
+      <p class="eyebrow">PROJECT / VIVA NOTE</p>
+      <p><strong>Input:</strong> a BITS Goa start point and destination.</p>
+      <p><strong>Processing:</strong> the application creates two campus route models, samples live weather at multiple checkpoints, considers the D-Spine when a route touches the D-side, calculates a weather-risk score, compares the routes and selects the lower-risk option as primary.</p>
+      <p><strong>Output:</strong> primary route + backup route + live weather + route statistics + checkpoint table + downloadable CSV dataset.</p>
+      <p class="warning"><strong>Accuracy note:</strong> landmark names are based on BITS Goa's published campus information/map. The plotted walking paths and coordinates are an approximate student-project model, not an official BITS pedestrian navigation network. The D-side hostel names (DH1–DH6) and D-Spine concept are supported by BITS Goa sources, while the plotted coordinates remain approximate until verified against an official pedestrian map. Follow actual campus walkways and access rules.</p>
     </section>
   </main>
 
-  <footer>Student project · BITS Goa · Weather data: Open-Meteo · Map: OpenStreetMap/Leaflet</footer>
+  <footer>Student project · BITS Pilani K. K. Birla Goa Campus · Weather: Open-Meteo · Map: OpenStreetMap / Leaflet</footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="script.js"></script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>

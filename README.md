@@ -1,21 +1,42 @@
-# BITS Goa Weather-Aware Route Planner
+# BITS Goa Weather-Aware Campus Route Planner v10
 
-This version uses an **actual interactive OpenStreetMap base map** instead of the uploaded screenshot.
+A student project for the BITS Pilani K. K. Birla Goa Campus.
 
-## Features
-- Real OpenStreetMap campus/road map.
-- Normal walking route from the OSRM routing service.
-- Covered-path overlay from the manually marked JSON data supplied for this project.
-- D-Spine is treated as covered.
-- Live BITS Goa weather from Open-Meteo.
-- If rain or significant rain probability is detected, the covered route is selected.
-- If conditions are dry, the normal road route is selected.
-- The other route is displayed as a dashed alternative.
+## Main idea
+Choose a campus start and destination. The app compares:
 
-## GitHub Pages
-Upload all files in this folder to the repository root. Do **not** upload the ZIP itself.
+- Straight-line/geometric distance
+- Walkable distance through an explicit campus path network
+- Covered/sheltered walkable route
+- Open/outdoor walkable route
 
-## Important
-Internet access is required because the page loads OpenStreetMap tiles, OSRM walking routes and Open-Meteo weather data.
+The app then uses live Open-Meteo weather data to recommend a primary route and retain the other as a backup. If rain starts while an open route is being used, the covered route is presented as the fallback.
 
-Sources/services: OpenStreetMap, OSRM, Open-Meteo.
+## Important map rule
+The route network is modeled from the BITS Goa map screenshots supplied for this project.
+
+- **Red D-Spine = covered** (explicitly included in the covered graph)
+- **Yellow corridors = covered**
+- Grey corridors = open/campus circulation used for the outdoor alternative
+- Black dashed line = straight-line geometric comparison only
+
+The D-Spine is not merely a visual overlay; its edges are part of the routing graph and contribute to covered-distance percentage.
+
+## Campus grouping
+Selectors group destinations into Campus Facilities, Academic, A-side hostels, C-side hostels, D-side hostels, Mess and Sports.
+
+## v10 update: calibrated from a real Google Maps screenshot
+A-Wing, B-Dome, C-Wing, Library, SAC, C-Mess, LT-1/2/3/4 and DH-1/3/4/6 now use
+coordinates calibrated from the user's own Google Maps screenshot annotations,
+anchored against two real GPS points. Five new spots were added (Sub Spot,
+ICE & SPICE, Food King, A-Mess, CC-Lab), along with a newly discovered covered
+walkway from the academic core down to A-Mess, a second parallel covered loop
+between DH-4 and DH-6, and a short D-Spine extension into DH-4. See
+`PROJECT_NOTES.md` for the full list and a known limitation around a few
+older junction nodes that weren't part of the recalibration.
+
+## Accuracy note
+The official BITS Goa campus/admin material establishes campus landmarks and hostel groups. Most pedestrian/covered-path geometry is modeled from user-supplied screenshots, with a subset now calibrated against real GPS anchor points as described above. It should still not be represented as an official GIS pedestrian network — verify anything safety-critical on site.
+
+## Run locally
+Open with VS Code Live Server, or deploy the files to GitHub Pages. Internet access is required for Leaflet tiles and Open-Meteo weather.

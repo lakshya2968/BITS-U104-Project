@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>BITS Goa Weather Route Planner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>BITS Goa Weather-Aware Route Planner</h1>
+    <p>Built from your Google Maps screenshot + manually marked covered paths.</p>
+  </div>
+  <button id="weatherBtn">Refresh weather</button>
+</header>
+<main>
+  <section class="controls">
+    <div class="field"><label for="start">Start</label><select id="start"></select></div>
+    <div class="swap">→</div>
+    <div class="field"><label for="end">Destination</label><select id="end"></select></div>
+    <button id="planBtn" class="primary">Plan route</button>
+    <button id="clearBtn">Clear route</button>
+  </section>
+
+  <section class="status-grid">
+    <article class="card weather"><div class="eyebrow">Campus weather</div><div id="weatherValue">Loading…</div><div id="weatherDetail">BITS Goa • 15.3914, 73.8796</div></article>
+    <article class="card recommendation"><div class="eyebrow">Recommendation</div><div id="recommendation">Choose two locations.</div><div id="recommendationDetail"></div></article>
+    <article class="card metrics"><div class="eyebrow">Route</div><div id="routeMetrics">—</div></article>
+  </section>
+
+  <section class="legend">
+    <span><i class="dot covered"></i>Covered path</span>
+    <span><i class="dot spine"></i>D-Spine (covered)</span>
+    <span><i class="dot road"></i>Visible road / open path</span>
+    <span><i class="line primaryLine"></i>Primary route</span>
+    <span><i class="line altLine"></i>Alternative</span>
+  </section>
+
+  <section class="map-shell">
+    <div class="map-wrap" id="mapWrap">
+      <img src="map.png" alt="User-provided Google Maps screenshot of BITS Goa campus">
+      <canvas id="overlay"></canvas>
+    </div>
+  </section>
+
+  <section class="bottom-grid">
+    <article class="card"><h2>How the network is built</h2><ul>
+      <li><b>Open:</b> visible Google Maps road lines were extracted from the supplied screenshot.</li>
+      <li><b>Covered:</b> paths from your second JSON file.</li>
+      <li><b>D-Spine:</b> your marked points are connected and treated as covered.</li>
+      <li>The planner snaps each selected location to the nearest available path pixel and runs Dijkstra routing.</li>
+    </ul></article>
+    <article class="card"><h2>Weather logic</h2><p>In rain or high rain probability, covered paths receive a lower routing cost. In dry conditions, the planner can favor the shorter open-road route while still showing a covered alternative.</p><p class="muted">Weather is fetched from Open-Meteo when the page is hosted online. Routing still works if weather cannot be fetched.</p></article>
+  </section>
+</main>
+<script src="map-data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

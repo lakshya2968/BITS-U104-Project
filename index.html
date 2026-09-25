@@ -1,59 +1,73 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BITS Goa Weather Route Planner</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BITS Goa Weather Route Planner</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
+<header class="topbar">
   <div>
     <h1>BITS Goa Weather-Aware Route Planner</h1>
-    <p>Built from your Google Maps screenshot + manually marked covered paths.</p>
+    <p>Live OpenStreetMap road map + your manually marked covered paths</p>
   </div>
   <button id="weatherBtn">Refresh weather</button>
 </header>
 <main>
-  <section class="controls">
+  <section class="controls card">
     <div class="field"><label for="start">Start</label><select id="start"></select></div>
     <div class="swap">→</div>
     <div class="field"><label for="end">Destination</label><select id="end"></select></div>
     <button id="planBtn" class="primary">Plan route</button>
-    <button id="clearBtn">Clear route</button>
+    <button id="clearBtn">Clear</button>
   </section>
 
-  <section class="status-grid">
-    <article class="card weather"><div class="eyebrow">Campus weather</div><div id="weatherValue">Loading…</div><div id="weatherDetail">BITS Goa • 15.3914, 73.8796</div></article>
-    <article class="card recommendation"><div class="eyebrow">Recommendation</div><div id="recommendation">Choose two locations.</div><div id="recommendationDetail"></div></article>
-    <article class="card metrics"><div class="eyebrow">Route</div><div id="routeMetrics">—</div></article>
+  <section class="layout">
+    <section class="map-card">
+      <div id="map"></div>
+      <div class="map-note">Map: OpenStreetMap • Routing: OSRM • Weather: Open-Meteo</div>
+    </section>
+
+    <aside class="side">
+      <article class="card weather-card">
+        <div class="eyebrow">CURRENT CAMPUS WEATHER</div>
+        <div id="weatherMain">Loading…</div>
+        <div id="weatherDetail">BITS Pilani Goa Campus</div>
+        <div class="weather-grid" id="weatherGrid"></div>
+        <div class="weather-status" id="weatherStatus"></div>
+      </article>
+      <article class="card recommendation">
+        <div class="eyebrow">ROUTE RECOMMENDATION</div>
+        <h2 id="recommendation">Choose two locations</h2>
+        <p id="recommendationDetail">The planner will use covered paths when rain is detected and normal roads when conditions are clear.</p>
+      </article>
+      <article class="card metrics">
+        <div class="eyebrow">ROUTE DETAILS</div>
+        <div id="routeMetrics">—</div>
+      </article>
+      <article class="card legend">
+        <div><span class="legend-line normal"></span> Normal road route</div>
+        <div><span class="legend-line covered"></span> Covered route</div>
+        <div><span class="legend-line alternative"></span> Alternative</div>
+      </article>
+    </aside>
   </section>
 
-  <section class="legend">
-    <span><i class="dot covered"></i>Covered path</span>
-    <span><i class="dot spine"></i>D-Spine (covered)</span>
-    <span><i class="dot road"></i>Visible road / open path</span>
-    <span><i class="line primaryLine"></i>Primary route</span>
-    <span><i class="line altLine"></i>Alternative</span>
-  </section>
-
-  <section class="map-shell">
-    <div class="map-wrap" id="mapWrap">
-      <img src="map.png" alt="User-provided Google Maps screenshot of BITS Goa campus">
-      <canvas id="overlay"></canvas>
-    </div>
-  </section>
-
-  <section class="bottom-grid">
-    <article class="card"><h2>How the network is built</h2><ul>
-      <li><b>Open:</b> visible Google Maps road lines were extracted from the supplied screenshot.</li>
-      <li><b>Covered:</b> paths from your second JSON file.</li>
-      <li><b>D-Spine:</b> your marked points are connected and treated as covered.</li>
-      <li>The planner snaps each selected location to the nearest available path pixel and runs Dijkstra routing.</li>
-    </ul></article>
-    <article class="card"><h2>Weather logic</h2><p>In rain or high rain probability, covered paths receive a lower routing cost. In dry conditions, the planner can favor the shorter open-road route while still showing a covered alternative.</p><p class="muted">Weather is fetched from Open-Meteo when the page is hosted online. Routing still works if weather cannot be fetched.</p></article>
+  <section class="card info">
+    <h2>How it works</h2>
+    <ul>
+      <li>The background is a <b>live OpenStreetMap map</b>, not the uploaded screenshot.</li>
+      <li>Normal routing follows the real mapped road network through OSRM.</li>
+      <li>Your manually marked covered paths are overlaid on the real map and treated as covered.</li>
+      <li><b>Rain / significant rain probability → covered route is selected.</b></li>
+      <li><b>Clear / dry weather → normal road route is selected.</b></li>
+      <li>The other route is shown as an alternative whenever it can be calculated.</li>
+    </ul>
   </section>
 </main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="map-data.js"></script>
 <script src="script.js"></script>
 </body>

@@ -1,5 +1,5 @@
-# Project notes
+The screenshot is no longer used as the map background.
 
-The second uploaded JSON contains 23 covered-path strokes. The first uploaded JSON contains 19 locations and the D-Spine stroke. The D-Spine is connected from its supplied points and classified as covered.
+The project uses a live OpenStreetMap base map. The manually marked covered paths from the supplied JSON are retained, with the D-Spine classified as covered. Their original screenshot pixel coordinates are georeferenced using the Google Maps view center/zoom supplied with the screenshot so they can be displayed on the real map.
 
-Open-road extraction was performed from the light-gray road lines visible in the user-provided 1920x1080 Google Maps screenshot. It is intentionally a raster navigation layer rather than guessed campus geometry.
+Normal routes use OSRM's walking router. Weather uses Open-Meteo current conditions and precipitation probability. Rain/significant rain risk selects the covered route; dry conditions select the normal road route.

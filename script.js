@@ -1,51 +1,77 @@
-(function(){
-  const DATA=window.MAP_DATA, GRID=window.ROAD_GRID;
-  const S=GRID.cellSize,W=GRID.width,H=GRID.height,G=GRID.grid;
-  const startEl=document.getElementById('start'),endEl=document.getElementById('end'),canvas=document.getElementById('overlay'),wrap=document.getElementById('mapWrap');
-  const ctx=canvas.getContext('2d');
-  const weatherValue=document.getElementById('weatherValue'),weatherDetail=document.getElementById('weatherDetail'),recommendation=document.getElementById('recommendation'),recommendationDetail=document.getElementById('recommendationDetail'),routeMetrics=document.getElementById('routeMetrics');
-  const locations=DATA.locations;
-  locations.forEach((p,i)=>{const a=document.createElement('option');a.value=i;a.textContent=p.name;startEl.appendChild(a);const b=a.cloneNode(true);endEl.appendChild(b)});
-  startEl.value='8'; endEl.value='0';
-  function resize(){canvas.width=1920;canvas.height=1080;drawBase();}
-  function drawBase(){ctx.clearRect(0,0,canvas.width,canvas.height);}
-  window.addEventListener('resize',resize); resize();
-  function key(x,y){return y*W+x}
-  function parseKey(k){return [k%W,Math.floor(k/W)]}
-  class Heap{constructor(){this.a=[]}push(item){let a=this.a;a.push(item);let i=a.length-1;while(i){let p=(i-1)>>1;if(a[p][0]<=item[0])break;a[i]=a[p];i=p}a[i]=item}pop(){let a=this.a;if(!a.length)return null;const top=a[0],last=a.pop();if(a.length){let i=0;while(true){let l=i*2+1;if(l>=a.length)break;let r=l+1,c=r<a.length&&a[r][0]<a[l][0]?r:l;if(a[c][0]>=last[0])break;a[i]=a[c];i=c}a[i]=last}return top}}
-  function snap(pt){
-    const gx=Math.round(pt.x/S), gy=Math.round(pt.y/S);
-    let best=null;
-    for(let r=0;r<80;r++){
-      for(let y=Math.max(0,gy-r);y<=Math.min(H-1,gy+r);y++){
-        for(const x of [Math.max(0,gx-r),Math.min(W-1,gx+r)]){
-          if(G[y][x]!=="0"){const d=(x-gx)*(x-gx)+(y-gy)*(y-gy);if(!best||d<best.d)best={x,y,d};}
-        }
-      }
-      for(let x=Math.max(0,gx-r+1);x<Math.min(W,gx+r);x++){
-        for(const y of [Math.max(0,gy-r),Math.min(H-1,gy+r)]){
-          if(G[y][x]!=="0"){const d=(x-gx)*(x-gx)+(y-gy)*(y-gy);if(!best||d<best.d)best={x,y,d};}
-        }
-      }
-      if(best && best.d <= r*r) return best;
-    }
-    return best;
+const CAMPUS = {lat:15.3913605, lon:73.879555, zoom:16.8, width:1920, height:1080};
+const OSM = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSRM = 'https://router.project-osrm.org/route/v1/foot';
+const WEATHER = 'https://api.open-meteo.com/v1/forecast';
+let map, normalLayer=null, coveredLayer=null, altLayer=null, startMarker=null, endMarker=null;
+let weather=null;
+
+function worldXY(lat,lon){const scale=256*Math.pow(2,CAMPUS.zoom);return [(lon+180)/360*scale,(1-Math.asinh(Math.tan(lat*Math.PI/180))/Math.PI)/2*scale]}
+const centerWorld=worldXY(CAMPUS.lat,CAMPUS.lon);
+function pixelToLatLng(x,y){const scale=256*Math.pow(2,CAMPUS.zoom);const wx=centerWorld[0]+(x-CAMPUS.width/2);const wy=centerWorld[1]+(y-CAMPUS.height/2);const lon=wx/scale*360-180;const n=Math.PI-2*Math.PI*wy/scale;const lat=180/Math.PI*Math.atan(Math.sinh(n));return [lat,lon]}
+function hav(a,b){const R=6371000,p=Math.PI/180,d1=(b[0]-a[0])*p,d2=(b[1]-a[1])*p,x=Math.sin(d1/2)**2+Math.cos(a[0]*p)*Math.cos(b[0]*p)*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function fmtDist(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(2)+' km'}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+function initMap(){
+  map=L.map('map',{zoomControl:true}).setView([CAMPUS.lat,CAMPUS.lon],16);
+  L.tileLayer(OSM,{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+  const group=L.featureGroup();
+  MAP_DATA.locations.forEach(l=>{const ll=pixelToLatLng(l.x,l.y);const m=L.circleMarker(ll,{radius:7,weight:2,fillOpacity:.95}).addTo(group);m.bindTooltip(esc(l.name),{permanent:true,direction:'top',className:'location-label',offset:[0,-6]});l._ll=ll;m.on('click',()=>{document.getElementById('start').value=l.id});});
+  group.addTo(map);
+  drawCoveredNetwork();
+}
+function drawCoveredNetwork(){
+  const paths=MAP_DATA.paths.filter(p=>p.type==='covered'||p.type==='dspine');
+  const layers=[];
+  paths.forEach(p=>{const ll=p.points.map(q=>pixelToLatLng(q.x,q.y)); if(ll.length>1){L.polyline(ll,{color:p.type==='dspine'?'#e53935':'#f0a000',weight:p.type==='dspine'?7:5,opacity:.82,lineCap:'round',lineJoin:'round'}).addTo(map);layers.push(ll)}});
+}
+function populate(){const s=document.getElementById('start'),e=document.getElementById('end');MAP_DATA.locations.forEach(l=>{const o=document.createElement('option');o.value=l.id;o.textContent=l.name;s.appendChild(o);const q=o.cloneNode(true);e.appendChild(q)});if(MAP_DATA.locations.length>1){s.value=MAP_DATA.locations[0].id;e.value=MAP_DATA.locations[1].id}}
+function getLoc(id){return MAP_DATA.locations.find(x=>x.id===id)}
+
+async function fetchWeather(){
+  const url=WEATHER+`?latitude=${CAMPUS.lat}&longitude=${CAMPUS.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,rain,weather_code,wind_speed_10m&hourly=precipitation_probability,rain&forecast_days=1&timezone=auto`;
+  const r=await fetch(url);if(!r.ok)throw new Error('Weather request failed');const d=await r.json();
+  const c=d.current;const probs=d.hourly?.precipitation_probability||[];const rains=d.hourly?.rain||[];const now=c.time;let idx=d.hourly?.time?.findIndex(t=>t===now);if(idx<0)idx=0;const prob=probs[idx]??0;const rainNow=Math.max(c.rain||0,c.precipitation||0,rains[idx]||0);weather={temp:c.temperature_2m,feels:c.apparent_temperature,humidity:c.relative_humidity_2m,wind:c.wind_speed_10m,prob,rain:rainNow,code:c.weather_code};
+  const raining=weather.rain>0.1 || weather.prob>=40 || [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(weather.code);
+  weather.raining=raining;
+  document.getElementById('weatherMain').textContent=`${Math.round(weather.temp)}°C`;
+  document.getElementById('weatherDetail').textContent=`Feels like ${Math.round(weather.feels)}°C • BITS Goa campus`;
+  document.getElementById('weatherGrid').innerHTML=`<div>Humidity<b>${weather.humidity}%</b></div><div>Wind<b>${Math.round(weather.wind)} km/h</b></div><div>Rain now<b>${weather.rain.toFixed(1)} mm</b></div><div>Rain chance<b>${weather.prob}%</b></div>`;
+  const st=document.getElementById('weatherStatus');st.className='weather-status '+(raining?'rain':'clear');st.textContent=raining?'🌧 Rain / significant rain risk — prefer covered paths.':'☀️ Conditions are currently dry — use normal road route.';
+  return weather;
+}
+function routeUrl(a,b){return OSRM+`/${a[1]},${a[0]};${b[1]},${b[0]}?overview=full&geometries=geojson&steps=false`}
+async function osrm(a,b){const r=await fetch(routeUrl(a,b));if(!r.ok)throw new Error('Road routing failed');const d=await r.json();if(!d.routes?.length)throw new Error('No road route found');return {coords:d.routes[0].geometry.coordinates.map(p=>[p[1],p[0]]),distance:d.routes[0].distance,duration:d.routes[0].duration}}
+function coveredNodes(){const arr=[];MAP_DATA.paths.filter(p=>p.type==='covered'||p.type==='dspine').forEach(p=>p.points.forEach(q=>arr.push(pixelToLatLng(q.x,q.y))));return arr}
+function nearestNode(ll,nodes){let bi=0,bd=Infinity;nodes.forEach((x,i)=>{const d=hav(ll,x);if(d<bd){bd=d;bi=i}});return {i:bi,d:bd,ll:nodes[bi]}}
+function buildCoveredGraph(){const nodes=[];const edges=[];const idx=new Map();let id=0;MAP_DATA.paths.filter(p=>p.type==='covered'||p.type==='dspine').forEach(p=>{const ids=[];p.points.forEach(q=>{const ll=pixelToLatLng(q.x,q.y);const key=q.x.toFixed(1)+','+q.y.toFixed(1);if(!idx.has(key)){idx.set(key,id);nodes.push(ll);id++}ids.push(idx.get(key))});for(let i=1;i<ids.length;i++){const a=ids[i-1],b=ids[i];if(a!==b){const w=hav(nodes[a],nodes[b]);edges.push([a,b,w]);}}});return {nodes,edges}}
+function dijkstra(g,start,end){const n=g.nodes.length,dist=Array(n).fill(Infinity),prev=Array(n).fill(-1),used=Array(n).fill(false);dist[start]=0;for(let k=0;k<n;k++){let u=-1,best=Infinity;for(let i=0;i<n;i++)if(!used[i]&&dist[i]<best){best=dist[i];u=i}if(u<0)break;if(u===end)break;used[u]=true;for(const [a,b,w] of g.edges){let v=-1;if(a===u)v=b;else if(b===u)v=a;else continue;if(dist[v]>dist[u]+w){dist[v]=dist[u]+w;prev[v]=u}}}if(!isFinite(dist[end]))return null;const path=[];for(let u=end;u!==-1;u=prev[u])path.push(u);path.reverse();return {indices:path,distance:dist[end]}}
+async function coveredRoute(start,end){
+  const g=buildCoveredGraph();if(!g.nodes.length)throw new Error('No covered paths loaded');
+  const ns=nearestNode(start,g.nodes),ne=nearestNode(end,g.nodes);const core=dijkstra(g,ns.i,ne.i);if(!core)throw new Error('Covered network is disconnected for these locations');
+  const entry=await osrm(start,ns.ll);const exit=await osrm(ne.ll,end);
+  const coreCoords=core.indices.map(i=>g.nodes[i]);
+  const coords=[...entry.coords,...coreCoords,...exit.coords];
+  let dist=entry.distance+core.distance+exit.distance;
+  return {coords,distance:dist,duration:dist/1.25};
+}
+function drawRoute(r,kind){return L.polyline(r.coords,{color:kind==='normal'?'#1976d2':kind==='covered'?'#f0a000':'#7b61a8',weight:kind==='alternative'?5:7,opacity:.88,dashArray:kind==='alternative'?'10 8':null,lineCap:'round',lineJoin:'round'}).addTo(map)}
+function clearRoutes(){[normalLayer,coveredLayer,altLayer].forEach(x=>x&&map.removeLayer(x));normalLayer=coveredLayer=altLayer=null;if(startMarker)map.removeLayer(startMarker);if(endMarker)map.removeLayer(endMarker)}
+async function plan(){
+  clearRoutes();const a=getLoc(document.getElementById('start').value),b=getLoc(document.getElementById('end').value);if(!a||!b||a.id===b.id)return;
+  const start=a._ll,end=b._ll;startMarker=L.marker(start).addTo(map).bindPopup('Start: '+esc(a.name));endMarker=L.marker(end).addTo(map).bindPopup('Destination: '+esc(b.name));
+  map.fitBounds(L.latLngBounds([start,end]).pad(0.25));
+  const rec=document.getElementById('recommendation'),detail=document.getElementById('recommendationDetail'),metrics=document.getElementById('routeMetrics');rec.textContent='Calculating…';detail.textContent='';metrics.textContent='';
+  try{const [normal,covered]=await Promise.all([osrm(start,end),coveredRoute(start,end)]);normalLayer=drawRoute(normal,'normal');coveredLayer=drawRoute(covered,'covered');
+    const useCovered=weather?.raining??false;const primary=useCovered?covered:normal;const alt=useCovered?normal:covered;altLayer=drawRoute(alt,'alternative');
+    const pName=useCovered?'Covered route':'Normal road route';const reason=useCovered?'Rain/significant rain risk detected.':'Conditions are dry, so the normal road route is selected.';
+    rec.textContent=`${pName} selected`;detail.textContent=reason+` Alternative: ${useCovered?'normal road':'covered'} route is shown dashed.`;
+    metrics.innerHTML=`<b>Primary:</b> ${fmtDist(primary.distance)} • ~${Math.round(primary.duration/60)} min<br><b>Alternative:</b> ${fmtDist(alt.distance)} • ~${Math.round(alt.duration/60)} min`;
+  }catch(e){
+    try{const normal=await osrm(start,end);normalLayer=drawRoute(normal,'normal');rec.textContent='Normal road route selected';detail.textContent='Covered route could not be connected for these two locations.';metrics.innerHTML=`<b>Distance:</b> ${fmtDist(normal.distance)} • ~${Math.round(normal.duration/60)} min`;}
+    catch(err){rec.textContent='Could not calculate route';detail.textContent='Check your internet connection and try again.';metrics.textContent=err.message}
   }
-  function route(a,b,mode){
-    const s=snap(a),t=snap(b); if(!s||!t)return null;
-    const dist=new Float64Array(W*H);dist.fill(Infinity);const prev=new Int32Array(W*H);prev.fill(-1);const heap=new Heap();const sk=key(s.x,s.y),tk=key(t.x,t.y);dist[sk]=0;heap.push([0,sk]);
-    const dirs=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
-    while(heap.a.length){const [d,k]=heap.pop();if(d!==dist[k])continue;if(k===tk)break;const x=k%W,y=(k/W)|0;for(const [dx,dy] of dirs){const nx=x+dx,ny=y+dy;if(nx<0||nx>=W||ny<0||ny>=H)continue;const typ=G[ny][nx];if(typ==='0')continue;const step=Math.hypot(dx,dy)*S;let mult=1;if(mode==='rain')mult=typ==='2'?0.65:1.35;else if(mode==='dry')mult=typ==='2'?1.08:0.92;else mult=typ==='2'?0.95:1.0;const nd=d+step*mult,nk=key(nx,ny);if(nd<dist[nk]){dist[nk]=nd;prev[nk]=k;heap.push([nd,nk])}}}
-    if(!isFinite(dist[tk]))return null;const cells=[];let k=tk;while(k!==-1){cells.push(k);if(k===sk)break;k=prev[k]}cells.reverse();
-    let meters=0,covered=0;for(let i=1;i<cells.length;i++){const [x1,y1]=parseKey(cells[i-1]),[x2,y2]=parseKey(cells[i]);meters+=Math.hypot(x2-x1,y2-y1)*S*1.65;if(G[y2][x2]==='2')covered+=Math.hypot(x2-x1,y2-y1)*S*1.65}
-    return {cells,meters,covered,coveredPct:meters?covered/meters*100:0,snapStart:s,snapEnd:t};
-  }
-  function drawRoute(res,style){if(!res)return;ctx.save();ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();res.cells.forEach((k,i)=>{const [x,y]=parseKey(k);if(i===0)ctx.moveTo(x*S,y*S);else ctx.lineTo(x*S,y*S)});ctx.setLineDash(style.dash||[]);ctx.strokeStyle=style.color;ctx.lineWidth=style.width;ctx.stroke();ctx.restore()}
-  function drawLocations(a,b){locations.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.x,p.y, i===a||i===b?9:5,0,Math.PI*2);ctx.fillStyle=i===a?'#1769e0':i===b?'#e53935':'#ffffff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#1d2733';ctx.stroke();if(i===a||i===b){ctx.font='bold 13px system-ui';ctx.fillStyle='#17202a';ctx.fillText(p.name,p.x+11,p.y-9)}})}
-  let weather={rain:false,prob:0,temp:null,desc:'Weather unavailable'};
-  function weatherText(code){if(code===0)return'Clear';if(code<=3)return'Cloudy';if(code<=48)return'Foggy';if(code<=67)return'Rain';if(code<=77)return'Snow/Hail';if(code<=82)return'Showers';if(code<=99)return'Thunderstorm';return'Unknown'}
-  async function fetchWeather(){weatherValue.textContent='Loading…';try{const u='https://api.open-meteo.com/v1/forecast?latitude=15.3914&longitude=73.8796&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,rain,weather_code,wind_speed_10m&hourly=precipitation_probability&forecast_days=1&timezone=Asia%2FKolkata';const r=await fetch(u);if(!r.ok)throw new Error('weather request failed');const d=await r.json();const c=d.current;const h=d.hourly;const idx=Math.max(0,h.time.findIndex(t=>t>=c.time));const prob=idx>=0?h.precipitation_probability[idx]:0;weather={rain:(c.rain>0||c.precipitation>0||prob>=45||c.weather_code>=51),prob:prob||0,temp:c.temperature_2m,desc:weatherText(c.weather_code)};weatherValue.textContent=`${Math.round(c.temperature_2m)}°C • ${weather.desc}`;weatherDetail.textContent=`Feels ${Math.round(c.apparent_temperature)}°C • Rain now ${c.rain} mm • Probability ${weather.prob}% • Wind ${Math.round(c.wind_speed_10m)} km/h`;plan();}catch(e){weatherValue.textContent='Weather unavailable';weatherDetail.textContent='Routing still works; weather weighting defaults to balanced.';weather={rain:false,prob:0,temp:null,desc:'Unavailable'};plan();}}
-  function plan(){const ai=+startEl.value,bi=+endEl.value;if(ai===bi){recommendation.textContent='Choose two different locations.';routeMetrics.textContent='—';ctx.clearRect(0,0,canvas.width,canvas.height);drawLocations(ai,bi);return}const a=locations[ai],b=locations[bi];const mode=weather.rain?'rain':'dry';const primary=route(a,b,mode),alt=route(a,b,mode==='rain'?'dry':'rain');ctx.clearRect(0,0,canvas.width,canvas.height);if(alt)drawRoute(alt,{color:'#f08c00',width:4,dash:[12,10]});if(primary)drawRoute(primary,{color:'#1769e0',width:7});drawLocations(ai,bi);if(!primary){recommendation.textContent='No connected route found';recommendationDetail.textContent='Try another pair of locations.';routeMetrics.textContent='—';return}const why=weather.rain?'Rain risk is present, so covered paths are favored.':'Current conditions are relatively dry, so open roads can be favored for a shorter route.';recommendation.textContent=weather.rain?'Covered-first route selected':'Open-first route selected';recommendationDetail.textContent=why;routeMetrics.innerHTML=`Primary: <b>${primary.meters.toFixed(0)} m</b> • ${primary.coveredPct.toFixed(0)}% covered<br>Alternative: ${alt?alt.meters.toFixed(0)+' m • '+alt.coveredPct.toFixed(0)+'% covered':'not available'}`}
-  document.getElementById('planBtn').addEventListener('click',plan);document.getElementById('clearBtn').addEventListener('click',()=>{ctx.clearRect(0,0,canvas.width,canvas.height);recommendation.textContent='Choose two locations.';recommendationDetail.textContent='';routeMetrics.textContent='—'});document.getElementById('weatherBtn').addEventListener('click',fetchWeather);startEl.addEventListener('change',plan);endEl.addEventListener('change',plan);
-  plan();
-})();
+}
+async function refreshWeather(){const btn=document.getElementById('weatherBtn');btn.disabled=true;btn.textContent='Loading…';try{await fetchWeather()}catch(e){document.getElementById('weatherMain').textContent='Weather unavailable';document.getElementById('weatherStatus').textContent='Could not fetch live weather.'}finally{btn.disabled=false;btn.textContent='Refresh weather'}}
+
+document.addEventListener('DOMContentLoaded',()=>{populate();initMap();refreshWeather();document.getElementById('weatherBtn').onclick=refreshWeather;document.getElementById('planBtn').onclick=plan;document.getElementById('clearBtn').onclick=clearRoutes;});

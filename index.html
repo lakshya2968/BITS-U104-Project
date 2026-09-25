@@ -1,79 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BITS Goa Weather-Aware Route Planner</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BITS Goa Weather Route Planner</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
   <div>
     <h1>BITS Goa Weather-Aware Route Planner</h1>
-    <p>Normal routes when dry · covered routes when raining · indoor movement through B-Dome, C-Wing and A-Wing is allowed</p>
+    <p>Live OpenStreetMap road map + your manually marked covered paths</p>
   </div>
   <button id="weatherBtn">Refresh weather</button>
 </header>
-
 <main>
   <section class="controls card">
-    <div class="field"><label for="start">Start location</label><select id="start"></select></div>
+    <div class="field"><label for="start">Start</label><select id="start"></select></div>
     <div class="swap">→</div>
-    <div class="field"><label for="destination">Destination</label><select id="destination"></select></div>
+    <div class="field"><label for="end">Destination</label><select id="end"></select></div>
     <button id="planBtn" class="primary">Plan route</button>
     <button id="clearBtn">Clear</button>
   </section>
 
   <section class="layout">
-    <div class="map-card">
+    <section class="map-card">
       <div id="map"></div>
-      <div class="map-note">Rain: covered network is preferred. Dry: normal mapped route is preferred.</div>
-    </div>
+      <div class="map-note">Map: OpenStreetMap • Routing: OSRM • Weather: Open-Meteo</div>
+    </section>
 
     <aside class="side">
-      <div class="card weather-card">
+      <article class="card weather-card">
         <div class="eyebrow">CURRENT CAMPUS WEATHER</div>
-        <div id="weatherMain">--°C</div>
-        <div id="weatherDetail">Loading BITS Goa weather…</div>
-        <div id="weatherGrid" class="weather-grid"></div>
-        <div id="weatherStatus" class="weather-status">Checking weather…</div>
-      </div>
-
-      <div class="card recommendation">
+        <div id="weatherMain">Loading…</div>
+        <div id="weatherDetail">BITS Pilani Goa Campus</div>
+        <div class="weather-grid" id="weatherGrid"></div>
+        <div class="weather-status" id="weatherStatus"></div>
+      </article>
+      <article class="card recommendation">
         <div class="eyebrow">ROUTE RECOMMENDATION</div>
-        <h2 id="recommendation">Select locations</h2>
-        <p id="recommendationDetail">The app will choose the covered network during rain and the normal mapped route when conditions are dry.</p>
-        <div id="routeMetrics" class="metrics"></div>
-      </div>
-
-      <div class="card">
-        <div class="eyebrow">MAP LEGEND</div>
-        <div class="legend">
-          <div><span class="legend-line normal"></span>Normal mapped route</div>
-          <div><span class="legend-line primary"></span>Covered route</div>
-          <div><span class="legend-line dspine"></span>D-Spine (covered)</div>
-          <div><span class="legend-line indoor"></span>Indoor covered connection</div>
-          <div><span class="legend-line alternative"></span>Alternative route</div>
-        </div>
-      </div>
+        <h2 id="recommendation">Choose two locations</h2>
+        <p id="recommendationDetail">The planner will use covered paths when rain is detected and normal roads when conditions are clear.</p>
+      </article>
+      <article class="card metrics">
+        <div class="eyebrow">ROUTE DETAILS</div>
+        <div id="routeMetrics">—</div>
+      </article>
+      <article class="card legend">
+        <div><span class="legend-line normal"></span> Normal road route</div>
+        <div><span class="legend-line covered"></span> Covered route</div>
+        <div><span class="legend-line alternative"></span> Alternative</div>
+      </article>
     </aside>
   </section>
 
   <section class="card info">
-    <h2>Rain-routing logic</h2>
+    <h2>How it works</h2>
     <ul>
-      <li>During rain or a significant rain probability, the planner prefers the covered network.</li>
-      <li>The covered network can pass through <strong>D-Spine → B-Dome → LT 3 &amp; 4</strong>, rather than treating buildings as barriers.</li>
-      <li>B-Dome, C-Wing and A-Wing are modeled as indoor covered connectors, so a rainy route may travel through them to reach another covered path.</li>
-      <li>When conditions are clear/dry, the normal mapped route is primary and the covered route remains available as the alternative.</li>
+      <li>The background is a <b>live OpenStreetMap map</b>, not the uploaded screenshot.</li>
+      <li>Normal routing follows the real mapped road network through OSRM.</li>
+      <li>Your manually marked covered paths are overlaid on the real map and treated as covered.</li>
+      <li><b>Rain / significant rain probability → covered route is selected.</b></li>
+      <li><b>Clear / dry weather → normal road route is selected.</b></li>
+      <li>The other route is shown as an alternative whenever it can be calculated.</li>
     </ul>
-    <p class="small">The indoor connectors are a student-project routing model based on the marked campus pathways; they are not an official BITS pedestrian-navigation guarantee.</p>
   </section>
 </main>
-
-<footer>Student project · BITS Goa · Weather: Open-Meteo · Map: OpenStreetMap/Leaflet</footer>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="map-data.js"></script>
 <script src="script.js"></script>
 </body>

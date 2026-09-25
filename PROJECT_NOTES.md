@@ -1,5 +1,5 @@
-## Routing model update
+The screenshot is no longer used as the map background.
 
-The route planner now treats B-Dome, C-Wing and A-Wing as traversable indoor covered spaces. Explicit covered connectors are included in the routing graph so a rainy trip can move from D-Spine through B-Dome to LT 3 & 4, or through C-Wing/A-Wing to other covered destinations.
+The project uses a live OpenStreetMap base map. The manually marked covered paths from the supplied JSON are retained, with the D-Spine classified as covered. Their original screenshot pixel coordinates are georeferenced using the Google Maps view center/zoom supplied with the screenshot so they can be displayed on the real map.
 
-The actual basemap is OpenStreetMap. The screenshot is not used as the map background; the manually marked path data is converted to campus coordinates and drawn over the live map.
+Normal routes use OSRM's walking router. Weather uses Open-Meteo current conditions and precipitation probability. Rain/significant rain risk selects the covered route; dry conditions select the normal road route.

@@ -3,63 +3,112 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>BITS Goa Covered Route Planner</title>
+  <title>BITS Goa Route Planner</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <div>
-    <h1>BITS Goa Covered Route Planner</h1>
-    <p>Interactive campus map with D-Spine, A Wing, B Dome and C Wing treated as covered.</p>
-  </div>
-  <div class="header-actions"><button id="editMarkersBtn">Edit marker positions</button><button id="exportCoordsBtn" disabled>Export corrected coordinates</button><button id="weatherBtn">Refresh weather</button></div>
-</header>
-<main>
-  <section class="controls">
-    <div class="field"><label for="start">Start</label><select id="start"></select></div>
-    <div class="swap">→</div>
-    <div class="field"><label for="end">Destination</label><select id="end"></select></div>
-    <div class="field mode-field"><label for="routeMode">Route type</label><select id="routeMode"><option value="covered">Covered only</option><option value="weather">Weather-aware</option><option value="open">Open + covered</option></select></div>
-    <button id="planBtn" class="primary">Plan route</button>
-    <button id="allCoveredBtn">Route D-Spine → A Wing → B Dome → C Wing</button>
-    <button id="clearBtn">Clear</button>
-  </section>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">BG</div>
+      <div>
+        <h1>BITS Goa Route Planner</h1>
+        <p>Campus locations, weather-aware routing and simple navigation.</p>
+      </div>
+    </div>
+    <button id="weatherBtn" class="ghost-btn" type="button">↻ Refresh weather</button>
+  </header>
 
-  <section class="status-grid">
-    <article class="card weather"><div class="eyebrow">Campus weather</div><div id="weatherValue">Loading…</div><div id="weatherDetail">BITS Goa • 15.3914, 73.8796</div></article>
-    <article class="card recommendation"><div class="eyebrow">Route status</div><div id="recommendation">Choose two locations.</div><div id="recommendationDetail"></div></article>
-    <article class="card metrics"><div class="eyebrow">Route</div><div id="routeMetrics">—</div></article>
-  </section>
+  <main class="page">
+    <section class="hero card">
+      <div>
+        <span class="eyebrow">BITS Pilani · Goa Campus</span>
+        <h2>Find a route between any two campus locations.</h2>
+        <p class="muted">Building markers are intentionally approximate. Network lines stay hidden so the map remains clean; only your selected route is drawn.</p>
+      </div>
+      <div class="hero-status">
+        <span class="status-dot"></span>
+        <span id="mapStatus">Map ready</span>
+      </div>
+    </section>
 
-  <section class="legend">
-    <span><i class="line coveredLine"></i>Covered network</span>
-    <span><i class="line spineLine"></i>D-Spine</span>
-    <span><i class="line openLine"></i>Open road network</span>
-    <span><i class="line primaryLine"></i>Selected route</span>
-  </section>
+    <section class="planner card">
+      <div class="planner-head">
+        <div>
+          <span class="eyebrow">Route planner</span>
+          <h2>Where are you going?</h2>
+        </div>
+        <button id="clearBtn" class="text-btn" type="button">Clear route</button>
+      </div>
 
-  <section class="edit-bar" id="editBar" hidden>
-    <div><b>Marker editing is ON.</b> Drag a marker to the correct building/location. The route selectors will use the new position immediately.</div>
-    <div class="edit-coords" id="editCoords">Select a marker to see its coordinates.</div>
-  </section>
+      <div class="route-form">
+        <div class="field">
+          <label for="start">Start</label>
+          <select id="start" aria-label="Start location"></select>
+        </div>
+        <div class="route-arrow">→</div>
+        <div class="field">
+          <label for="end">Destination</label>
+          <select id="end" aria-label="Destination location"></select>
+        </div>
+        <div class="field mode-field">
+          <label for="routeMode">Routing mode</label>
+          <select id="routeMode">
+            <option value="covered">Covered route</option>
+            <option value="weather">Weather-aware</option>
+            <option value="open">Normal route</option>
+          </select>
+        </div>
+        <button id="planBtn" class="primary-btn" type="button">Plan route</button>
+      </div>
 
-  <section class="map-shell">
-    <div id="map"></div>
-  </section>
+      <div class="quick-row">
+        <span class="quick-label">Quick route</span>
+        <button id="allCoveredBtn" class="quick-btn" type="button">D-Spine → A Wing → B Dome → C Wing</button>
+      </div>
+    </section>
 
-  <section class="bottom-grid">
-    <article class="card"><h2>Covered network</h2><ul>
-      <li><b>D-Spine</b> is explicitly classified as covered.</li>
-      <li><b>A Wing</b>, <b>B Dome</b> and <b>C Wing</b> are available as route locations.</li>
-      <li><b>Covered only</b> prevents the route engine from using open-road cells.</li>
-      <li>The supplied covered-path strokes remain the covered network; the map underneath is now an interactive OpenStreetMap/Leaflet map.</li>
-    </ul></article>
-    <article class="card"><h2>Multi-stop covered route</h2><p>Use the button above to calculate one continuous covered-only route through <b>D-Spine → A Wing → B Dome → C Wing</b>.</p><p class="muted">The route geometry is georeferenced from the supplied Google Maps view, so it is approximate rather than survey-grade.</p></article>
-  </section>
-</main>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="map-data.js"></script>
-<script src="script.js"></script>
+    <section class="info-grid">
+      <article class="info-card weather-card">
+        <div class="eyebrow">Campus weather</div>
+        <div id="weatherValue" class="big-value">Loading…</div>
+        <div id="weatherDetail" class="small-text">Fetching current conditions…</div>
+      </article>
+      <article class="info-card route-card">
+        <div class="eyebrow">Route status</div>
+        <div id="recommendation" class="big-value compact">Choose two locations.</div>
+        <div id="recommendationDetail" class="small-text"></div>
+      </article>
+      <article class="info-card metric-card">
+        <div class="eyebrow">Route details</div>
+        <div id="routeMetrics" class="big-value compact">—</div>
+      </article>
+    </section>
+
+    <section class="map-card card">
+      <div class="map-header">
+        <div>
+          <span class="eyebrow">Campus map</span>
+          <h2>Marked locations</h2>
+        </div>
+        <div class="map-note"><span class="pin-demo"></span> Approximate building markers</div>
+      </div>
+      <div id="map" aria-label="BITS Goa campus route map"></div>
+    </section>
+
+    <section class="locations card">
+      <div>
+        <span class="eyebrow">Available places</span>
+        <h2>All marked locations</h2>
+      </div>
+      <div id="locationList" class="location-list"></div>
+    </section>
+  </main>
+
+  <footer>Route geometry is based on the supplied campus map and is approximate rather than survey-grade.</footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="map-data.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

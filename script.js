@@ -73,22 +73,39 @@ function buildCoveredGraph(){
     for(let i=1;i<ids.length;i++)addEdge(ids[i-1],ids[i]);
   }
   // Named anchors are added to the same graph so buildings can be traversed as covered indoor space.
+  // IMPORTANT: collect BOTH ends of every indoor connection. The old code only added
+  // the first name in each pair, which meant destinations such as "LT 3 & 4" and
+  // hostels such as "Dh-4" were not actually graph nodes and could not be reached.
   const anchors={};
-  for(const [name] of (MAP_DATA.indoorConnections||[])){
-    const ll=getNamedPoint(name); if(ll){const k=name==='D-SPINE'?'D-SPINE':`loc:${name.toLowerCase()}`;anchors[name]=addNode(ll,k)}
+  const indoorNames=[...new Set((MAP_DATA.indoorConnections||[]).flat())];
+  for(const name of indoorNames){
+    const ll=getNamedPoint(name);
+    if(ll){
+      const k=name==='D-SPINE'?'D-SPINE':`loc:${name.toLowerCase()}`;
+      anchors[name]=addNode(ll,k);
+    }
   }
-  for(const [name] of (MAP_DATA.indoorConnections||[])){
-    const ll=getNamedPoint(name); if(!ll)continue;
+
+  // Remember where the physical marked-path nodes end. Anchors should connect to
+  // those physical paths, not accidentally to another anchor.
+  const physicalNodeCount=nodes.length-indoorNames.filter(name=>anchors[name]!=null).length;
+  for(const name of indoorNames){
+    const ll=getNamedPoint(name);
     const ai=anchors[name];
-    // Connect named anchor to the nearest physical marked covered-path node.
+    if(!ll || ai==null)continue;
     let nearest=-1,best=Infinity;
-    nodes.forEach((n,i)=>{if(i===ai)return;const d=hav(ll,n);if(d<best){best=d;nearest=i}});
+    for(let i=0;i<physicalNodeCount;i++){
+      const d=hav(ll,nodes[i]);
+      if(d<best){best=d;nearest=i}
+    }
     if(nearest>=0)addEdge(ai,nearest);
   }
+
+  // Indoor/covered building connections are explicit traversable edges.
   for(const [a,b] of (MAP_DATA.indoorConnections||[])){
     if(anchors[a]!=null&&anchors[b]!=null)addEdge(anchors[a],anchors[b]);
   }
-  return {nodes,edges};
+  return {nodes,edges,anchors};
 }
 function nearestNode(ll,nodes){let bi=0,bd=Infinity;nodes.forEach((x,i)=>{const d=hav(ll,x);if(d<bd){bd=d;bi=i}});return {i:bi,d:bd,ll:nodes[bi]}}
 function dijkstra(g,start,end){

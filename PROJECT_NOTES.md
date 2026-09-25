@@ -1,5 +1,9 @@
-## Routing model update
+# Routing fix
 
-The route planner now treats B-Dome, C-Wing and A-Wing as traversable indoor covered spaces. Explicit covered connectors are included in the routing graph so a rainy trip can move from D-Spine through B-Dome to LT 3 & 4, or through C-Wing/A-Wing to other covered destinations.
-
-The actual basemap is OpenStreetMap. The screenshot is not used as the map background; the manually marked path data is converted to campus coordinates and drawn over the live map.
+- D-Spine is explicitly a covered routing segment.
+- D-Spine is connected to the D-side covered network and to DH-1/DH-3/DH-4.
+- A routing-only connector joins D-Spine to B-Dome.
+- B-Dome connects to LT 3 & 4, C-Wing and A-Wing.
+- C-Wing and A-Wing are traversable as covered/indoor sections.
+- The covered network is hidden from the base map; only the selected/alternative route is drawn.
+- The map legend has been removed.

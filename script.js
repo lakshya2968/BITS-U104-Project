@@ -93,11 +93,75 @@
   }
 
   const specialNames=new Set(['D-Spine','A wing','B dome','C wing']);
+  let editMode=false;
+  const markerRefs=[];
+  const editMarkersBtn=document.getElementById('editMarkersBtn');
+  const exportCoordsBtn=document.getElementById('exportCoordsBtn');
+  const editBar=document.getElementById('editBar');
+  const editCoords=document.getElementById('editCoords');
+  let selectedEditIndex=-1;
+
+  function pixelToLatLngArray(x,y){return pixelToLatLng(x,y);}
+  function latLngToPixel(lat,lng){
+    const x=SOURCE_CX+(lng-MAP_CENTER.lon)/360*WORLD;
+    const y0=Math.log(Math.tan(Math.PI/4+Math.radians(MAP_CENTER.lat)/2));
+    const ym=Math.log(Math.tan(Math.PI/4+Math.radians(lat)/2));
+    const y=SOURCE_CY-(ym-y0)*WORLD/(2*Math.PI);
+    return {x,y};
+  }
+  function markerIcon(special,editing){
+    return L.divIcon({className:'editable-location-icon',html:`<span class="location-dot ${special?'special':''} ${editing?'editing':''}"></span>`,iconSize:[20,20],iconAnchor:[10,10]});
+  }
+  function updateEditReadout(i){
+    if(i<0){editCoords.textContent='Select a marker to see its coordinates.';return;}
+    const p=locations[i];
+    editCoords.textContent=`${p.name} • X: ${p.x.toFixed(1)} • Y: ${p.y.toFixed(1)} • Lat: ${p.latlng[0].toFixed(7)} • Lon: ${p.latlng[1].toFixed(7)}`;
+  }
+  function setEditMode(on){
+    editMode=on;
+    editBar.hidden=!on;
+    editMarkersBtn.textContent=on?'Done editing markers':'Edit marker positions';
+    exportCoordsBtn.disabled=!on;
+    markerRefs.forEach((m,i)=>{
+      const special=specialNames.has(locations[i].name);
+      m.setIcon(markerIcon(special,on));
+      if(on)m.dragging.enable(); else m.dragging.disable();
+    });
+    if(!on){selectedEditIndex=-1;updateEditReadout(-1);}
+  }
+  function refreshLocationOptionLabels(){
+    // Keep selector values stable while marker positions are edited.
+    startEl.dispatchEvent(new Event('change'));
+  }
   locations.forEach((p,i)=>{
     const special=specialNames.has(p.name);
-    const marker=L.circleMarker(p.latlng,{radius:special?8:5,color:special?'#17324d':'#334155',weight:2,fillColor:special?'#fff':'#fff',fillOpacity:1});
-    marker.bindTooltip(p.name,{direction:'top',className:'route-label',offset:[0,-5]});
+    const marker=L.marker(p.latlng,{draggable:false,icon:markerIcon(special,false),autoPan:false});
+    marker.bindTooltip(p.name,{direction:'top',className:'route-label',offset:[0,-8]});
+    marker.on('click',()=>{if(editMode){selectedEditIndex=i;updateEditReadout(i);}});
+    marker.on('dragstart',()=>{selectedEditIndex=i;updateEditReadout(i);});
+    marker.on('drag',e=>{
+      const ll=e.target.getLatLng();
+      const px=latLngToPixel(ll.lat,ll.lng);
+      p.latlng=[ll.lat,ll.lng];
+      p.x=Math.max(0,Math.min(1920,px.x));
+      p.y=Math.max(0,Math.min(1080,px.y));
+      updateEditReadout(i);
+    });
+    marker.on('dragend',()=>{
+      updateEditReadout(i);
+      planPair();
+    });
     marker.addTo(markerLayer);
+    markerRefs.push(marker);
+  });
+
+  editMarkersBtn.addEventListener('click',()=>setEditMode(!editMode));
+  exportCoordsBtn.addEventListener('click',()=>{
+    const payload={version:1,source:'Corrected marker coordinates exported from BITS Goa Covered Route Planner',locations:locations.filter(p=>!p.synthetic).map(p=>({id:p.id,name:p.name,type:p.type,x:Number(p.x.toFixed(1)),y:Number(p.y.toFixed(1)),lat:Number(p.latlng[0].toFixed(7)),lon:Number(p.latlng[1].toFixed(7))}))};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='bits-goa-corrected-coordinates.json';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
 
   // Layer control keeps the covered category explicit.

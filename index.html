@@ -13,7 +13,7 @@
     <h1>BITS Goa Covered Route Planner</h1>
     <p>Interactive campus map with D-Spine, A Wing, B Dome and C Wing treated as covered.</p>
   </div>
-  <button id="weatherBtn">Refresh weather</button>
+  <div class="header-actions"><button id="editMarkersBtn">Edit marker positions</button><button id="exportCoordsBtn" disabled>Export corrected coordinates</button><button id="weatherBtn">Refresh weather</button></div>
 </header>
 <main>
   <section class="controls">
@@ -37,6 +37,11 @@
     <span><i class="line spineLine"></i>D-Spine</span>
     <span><i class="line openLine"></i>Open road network</span>
     <span><i class="line primaryLine"></i>Selected route</span>
+  </section>
+
+  <section class="edit-bar" id="editBar" hidden>
+    <div><b>Marker editing is ON.</b> Drag a marker to the correct building/location. The route selectors will use the new position immediately.</div>
+    <div class="edit-coords" id="editCoords">Select a marker to see its coordinates.</div>
   </section>
 
   <section class="map-shell">

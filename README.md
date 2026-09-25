@@ -1,16 +1,28 @@
-# BITS Goa Weather-Aware Route Planner
+# BITS Goa Covered Route Planner
 
-This version uses the user's supplied Google Maps screenshot as the map canvas.
+This revision replaces the screenshot-only map canvas with an interactive Leaflet/OpenStreetMap map.
 
-## Network rules
-- Open paths: visible Google Maps road lines were extracted from the screenshot into a 6-pixel raster navigation grid.
-- Covered paths: imported from `bits-goa-map-data (1).json`.
-- D-Spine: imported from `bits-goa-map-data.json`, connected in point order, and treated as covered.
-- Locations: imported from `bits-goa-map-data.json`.
+## What changed
+- Interactive street map instead of `map.png` as the map background.
+- Supplied covered strokes are displayed as a **Covered paths** layer.
+- D-Spine is displayed separately and treated as covered.
+- Added **Covered only** routing mode: open-road cells are excluded.
+- Added a **D-Spine → A Wing → B Dome → C Wing** multi-stop covered route button.
+- Added a small generated connector where the supplied D-Spine covered stroke is disconnected from the supplied A/B/C covered network. It is shown as an orange dashed line so it is not confused with the user-marked covered strokes.
+- Existing locations and the screenshot-derived navigation grid are retained and georeferenced to the supplied Google Maps center/zoom.
+- Weather-aware and open+covered modes remain available.
 
-## Run
-Upload all files to GitHub Pages, keeping `map.png`, `index.html`, `script.js`, `style.css`, and `map-data.js` together.
+## Files
+Keep these files together on GitHub Pages:
+- `index.html`
+- `script.js`
+- `style.css`
+- `map-data.js`
 
-The route engine uses Dijkstra on the screenshot-derived navigation grid. Distances are approximate because this is a screenshot-based map; the scale factor is based on the map zoom shown in the supplied URL.
+`map.png` is no longer required by the app.
 
-Weather uses Open-Meteo when the page is online. If weather is unavailable, routing still works.
+## Map provider
+The app uses Leaflet with OpenStreetMap tiles. No Google Maps API key is required.
+
+## Accuracy note
+The route network was originally digitized from the supplied 1920x1080 Google Maps screenshot. The live map is georeferenced using the center/zoom from that view, so the overlay is approximate rather than survey-grade.

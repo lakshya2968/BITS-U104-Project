@@ -18,3 +18,7 @@
 
 /* Distance comparison */
 .straight-line{display:inline-block;width:34px;border-top:3px dashed #111827;vertical-align:middle;margin-right:5px}
+.path-label{background:rgba(225,29,72,.92);color:#fff;border:0;border-radius:999px;padding:2px 7px;font-weight:800;font-size:11px;text-align:center;line-height:18px;box-shadow:0 2px 7px rgba(0,0,0,.18)}
+.covered-label{background:rgba(242,197,0,.96);color:#222}
+.leaflet-tooltip{font-weight:650}
+optgroup{font-weight:800;color:#344054}

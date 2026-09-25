@@ -36,7 +36,7 @@
       <span>📍 BITS Goa campus only</span>
       <span>🌦️ Live weather analysis</span>
       <span>🛣️ Campus path network</span>
-    <span>🟣 D-Spine + covered paths</span>
+    <span>🔴 D-Spine = covered + 🟡 other covered paths</span>
       <span>💾 CSV data export</span>
     </section>
 
@@ -70,7 +70,7 @@
           <span><b class="checkpoint-dot"></b> Weather checkpoint</span>
           <span><b class="start-dot"></b> Start</span>
           <span><b class="destination-dot"></b> Destination</span>
-          <span><b class="spine-line"></b> D-Spine</span><span><b class="covered-line"></b> Covered path</span>
+          <span><b class="spine-line"></b> D-Spine (covered)</span><span><b class="covered-line"></b> Covered path</span>
         </div>
       </div>
 
@@ -155,13 +155,13 @@
       <p><strong>Input:</strong> a BITS Goa start point and destination.</p>
       <p><strong>Processing:</strong> the application calculates the direct straight-line distance first, then finds a walkable path through the campus path network. It separately evaluates covered-first and open-first walkable routes, samples live weather at multiple checkpoints, considers covered corridors where the network supports them, calculates weather-risk scores and keeps the other route as backup.</p>
       <p><strong>Output:</strong> primary route + backup route + live weather + route statistics + checkpoint table + downloadable CSV dataset.</p>
-      <p class="warning"><strong>Accuracy note:</strong> the straight line is purely geometric. The walkable route follows the project's explicit campus path network and never uses the straight line as the walking route. The D-Spine is treated as a logical campus corridor in routing, but its exact geometry is intentionally not claimed as an official GIS trace. Covered corridors are given preference in the covered-route model. Verify actual campus access and pedestrian paths on site.</p>
+      <p class="warning"><strong>Accuracy note:</strong> the straight line is purely geometric. The walkable route follows the project's explicit campus path network and never uses the straight line as the walking route. The red D-Spine and yellow corridors are modeled from the supplied BITS Goa campus-map screenshots. The D-Spine is explicitly part of the covered network. The straight line is only geometric; the walking route follows the explicit campus network. Covered-route scoring gives preference to all covered sections, including the D-Spine, while the open route provides the alternative. Verify any access restrictions on campus. Verify actual campus access and pedestrian paths on site.</p>
     </section>
   </main>
 
   <footer>Student project · BITS Pilani K. K. Birla Goa Campus · Weather: Open-Meteo · Map: OpenStreetMap / Leaflet</footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="script.js?v=5"></script>
+  <script src="script.js?v=9"></script>
 </body>
 </html>

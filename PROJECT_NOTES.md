@@ -1,43 +1,17 @@
-# BITS Goa project notes — path-network version
+# Project Notes — v9
 
-## Core idea
+## Changes from v8
+- D-Spine is now explicitly classified as a covered path in the graph.
+- D-Spine edges are included in `COVERED_PATHS` and therefore in `coveredPairs`.
+- D-Spine is no longer added as a separate open-only edge.
+- Added a more detailed D-side network with D-West/D-1...D-East and D-South/D-Dorm junctions.
+- Kept straight-line distance separate from walkable distance.
+- Covered and open routes are computed on the same explicit campus graph with different route costs.
+- The recommendation includes a rain fallback: if open is selected, covered is the backup; if covered is selected, open remains the alternative for drier conditions.
+- The map labels the D-Spine as covered.
 
-Choose a BITS Goa start point and destination. The app calculates two campus-network routes:
-
-1. **Covered / sheltered-first**
-2. **Open / outdoor-first**
-
-Live weather is sampled at checkpoints along both paths. A weather-risk score is then used to keep one route as the primary route and the other as backup.
-
-## Covered paths considered
-
-BITS Goa's current conference/walking information explicitly says to use two covered pathways during rain/humid weather:
-
-- one from the **C hostels to the Main Building / B-Dome**
-- one from the **D hostels to the D-Spine**
-
-Those are now represented as lower-cost covered edges in `COVERED_EDGES`.
-
-## Why the map was changed
-
-The earlier version created routes by connecting buildings with straight interpolated lines. That made some routes visually pass through buildings/lawns and made the D-side geometry too linear.
-
-This version uses an explicit graph (`OPEN_EDGES`) so the route is made from named campus connectors. This makes it much easier to correct a connector without rewriting the weather logic.
-
-## If you know a path is wrong
-
-Please tell me something like:
-
-- `CH-3 -> CH-4 -> covered connector -> B-Dome`
-- `DH-6 -> D-Mess -> D-Spine`
-- `Main Gate -> Reception -> Central Lawns`
-
-or send a screenshot/marked campus map. I can then update the graph directly.
-
-## Viva explanation
-
-**Input:** start + destination.
-
-**Processing:** graph routing → covered/open path comparison → live weather sampling → weather-risk calculation.
-
-**Output:** primary route + backup route + weather metrics + route statistics + checkpoint table + CSV.
+## Source/reference notes
+- User-supplied screenshots are the geometry reference for red D-Spine and yellow covered paths.
+- BITS Goa official/admin sources are used for campus naming and hostel group context.
+- OpenStreetMap is the visual basemap only.
+- Open-Meteo supplies current weather values.
